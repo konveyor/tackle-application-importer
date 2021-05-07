@@ -9,8 +9,8 @@ import org.jboss.resteasy.annotations.providers.multipart.PartType;
 
 public class MultipartImportBody {
     @FormParam("file")
-    @PartType(MediaType.APPLICATION_OCTET_STREAM)
-    private byte[] file;
+    @PartType(MediaType.APPLICATION_JSON)
+    private String file;
     @FormParam("fileName")
     @PartType(MediaType.TEXT_PLAIN)
     private String fileName;
@@ -18,7 +18,7 @@ public class MultipartImportBody {
     public MultipartImportBody() {}
 
 
-    public void setFile(byte [] file)
+    public void setFile(String file)
     {
         this.file = file;
     }
@@ -28,7 +28,7 @@ public class MultipartImportBody {
         this.fileName = fileName;
     }
 
-    public byte[] getFile() {
+    public String getFile() {
         return file;
     }
 

@@ -1,12 +1,16 @@
 package io.tackle.applicationimporter;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.MappingIterator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvParser;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import org.apache.commons.io.FileUtils;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
 import javax.ws.rs.Consumes;
@@ -15,8 +19,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Iterator;
+import java.util.Map;
 
 @Path("/file")
 public class ImportService {
@@ -39,69 +46,60 @@ public class ImportService {
         return Response.ok().build();
     }
 
-    private void writeFile(byte[] content, String filename) throws IOException {
+    private void writeFile(String content, String filename) throws IOException {
 
-        ByteArrayInputStream bais = new ByteArrayInputStream(content);
-        Arrays.asList().forEach(b -> System.out.println(b));
-        Iterator<String> iterator = decode(bais);
-
-        while (iterator.hasNext())
+        MappingIterator<ApplicationImport> iter = decode(content);
+        System.out.println("Printing csv fields");
+        while (iter.hasNext())
         {
-            String next = iterator.next();
-            System.out.println(next + " ");
+            System.out.println(iter.next());
         }
-       /** String line = "";
-        InputStreamReader isReader = new InputStreamReader(bais);
-        BufferedReader br = new BufferedReader(isReader);
-
-        while ((line = br.readLine()) != null)   //returns a Boolean value
-        {
-            System.out.println("Next Line: ");
-            CsvParser parser = new CsvParser();
-            String[] fields = line.split(",");    // use comma as separator
-            Arrays.stream(fields).forEach( field -> System.out.println(field + " "));
-
-        }*/
 
     }
 
-    private Iterator<String> decode(InputStream inputStream) {
+
+
+    private MappingIterator<ApplicationImport> decode(String inputContent) {
         try {
-            byte[] inputFile = getFilePortionOfMessage(inputStream);
+           String inputFileContent = getFilePortionOfMessage(inputContent);
+
             CsvMapper mapper = new CsvMapper();
-            CsvSchema csvSchema = mapper.schemaFor(String.class);
+
+            mapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
+            CsvSchema csvSchema = mapper.schemaFor(ApplicationImport.class).withHeader();
             String columnSeparator = ",";
 
-            csvSchema = csvSchema.withColumnSeparator(columnSeparator.charAt(0));
+            csvSchema = csvSchema.withColumnSeparator(columnSeparator.charAt(0))
+                                .withLineSeparator("\r\n");
 
-            ObjectReader reader = mapper.readerFor(String.class).withFeatures(CsvParser.Feature.FAIL_ON_MISSING_COLUMNS)
+            ObjectReader reader = mapper.readerFor(ApplicationImport.class)
+                    .withFeatures(CsvParser.Feature.INSERT_NULLS_FOR_MISSING_COLUMNS,
+                            CsvParser.Feature.EMPTY_STRING_AS_NULL)
                     .with(csvSchema);
 
-            return reader.readValues(inputFile);
+            return reader.readValues(inputFileContent);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private byte[] getFilePortionOfMessage(InputStream content)
+    private String getFilePortionOfMessage(String content)
     {
-        try {
-            JsonMapper jsonMapper =new JsonMapper();
-            JsonParser parser = jsonMapper.createParser(content);
-
+        try
+        {
             System.out.println("Input Message:" + content);
 
-            byte[] returnValue = null;
-            while(parser.hasCurrentToken()){
-                if (parser.currentName().equals("file"))
-                {
-                    returnValue =  parser.getCurrentToken().asByteArray();
-                }
-            }
-            System.out.println("File Portion Of Message:" + returnValue);
-            return returnValue;
+            ObjectNode node = new ObjectMapper().readValue(content, ObjectNode.class);
+            String fileContent = node.get("file").asText();
+
+            System.out.println("File Portion Of Message:" + fileContent);
+            return fileContent;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
+
+
+
+
 }

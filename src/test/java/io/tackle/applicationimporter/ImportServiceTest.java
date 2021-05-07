@@ -19,6 +19,7 @@ import javax.ws.rs.core.MediaType;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 
 import static io.restassured.RestAssured.given;
@@ -54,7 +55,9 @@ public class ImportServiceTest extends SecuredResourceTest {
         try {
             System.out.println("construct File begin");
             byte [] fileBytes = FileUtils.readFileToByteArray(importFile);
-            importBody.setFile(fileBytes);
+            String fileString = FileUtils.readFileToString(importFile);
+            importBody.setFile(fileString);
+            System.out.println("File body: " + fileString);
             Arrays.asList(fileBytes).forEach(b -> System.out.println(":" + b));
             System.out.println("construct File complete");
         }
