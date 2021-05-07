@@ -8,24 +8,27 @@ import javax.ws.rs.core.MediaType;
 import org.jboss.resteasy.annotations.providers.multipart.PartType;
 
 public class MultipartImportBody {
-    private InputStream file;
-    private String fileName;
-
     @FormParam("file")
     @PartType(MediaType.APPLICATION_OCTET_STREAM)
-    public void setFile(InputStream file)
+    private byte[] file;
+    @FormParam("fileName")
+    @PartType(MediaType.TEXT_PLAIN)
+    private String fileName;
+
+    public MultipartImportBody() {}
+
+
+    public void setFile(byte [] file)
     {
         this.file = file;
     }
 
-    @FormParam("fileName")
-    @PartType(MediaType.TEXT_PLAIN)
     public void setFilename(String fileName)
     {
         this.fileName = fileName;
     }
 
-    public InputStream getFile() {
+    public byte[] getFile() {
         return file;
     }
 
