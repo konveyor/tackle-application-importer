@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static io.restassured.RestAssured.given;
@@ -50,18 +51,19 @@ public class ImportServiceTest extends SecuredResourceTest {
     @Test
     protected void testImportServicePost() {
 
-        File importFile = new File("/home/mbrophy/Projects/tackle-application-importer/src/test/resources/sample_application_import.csv");
+        ClassLoader classLoader = getClass().getClassLoader();
+        File importFile = new File(classLoader.getResource("sample_application_import.csv").getFile());
         MultipartImportBody importBody = new MultipartImportBody();
         try {
             System.out.println("construct File begin");
             byte [] fileBytes = FileUtils.readFileToByteArray(importFile);
-            String fileString = FileUtils.readFileToString(importFile);
+            Arrays.asList(fileBytes).forEach(b -> System.out.println(":" + b));
+            String fileString = new String(fileBytes, StandardCharsets.UTF_8);
             importBody.setFile(fileString);
             System.out.println("File body: " + fileString);
-            Arrays.asList(fileBytes).forEach(b -> System.out.println(":" + b));
             System.out.println("construct File complete");
         }
-        catch(IOException ioe){
+        catch(Exception ioe){
             ioe.printStackTrace();
         }
         importBody.setFilename("sample_application_import.csv");
