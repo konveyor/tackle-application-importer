@@ -147,12 +147,12 @@ public class ApplicationImport {
                 ", Business Service="+ businessService +
                 ", Tag Type 1="+ tagType1 +
                 ", Tag 1="+ tag1 +
-                ", Tag Type 1="+ tagType2 +
-                ", Tag 1="+ tag2 +
-                ", Tag Type 1="+ tagType3 +
-                ", Tag 1="+ tag3 +
-                ", Tag Type 1="+ tagType4 +
-                ", Tag 1="+ tag4 +"]";
+                ", Tag Type 2="+ tagType2 +
+                ", Tag 2="+ tag2 +
+                ", Tag Type 3="+ tagType3 +
+                ", Tag 3="+ tag3 +
+                ", Tag Type 4="+ tagType4 +
+                ", Tag 4="+ tag4 +"]";
     }
 
 }
