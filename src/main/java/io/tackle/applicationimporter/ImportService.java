@@ -65,16 +65,14 @@ public class ImportService {
 
             CsvMapper mapper = new CsvMapper();
 
-            mapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
-            CsvSchema csvSchema = mapper.schemaFor(ApplicationImport.class).withHeader();
+            CsvSchema csvSchema = CsvSchema.emptySchema().withHeader();
             String columnSeparator = ",";
 
             csvSchema = csvSchema.withColumnSeparator(columnSeparator.charAt(0))
-                                .withLineSeparator("\r\n");
+                                .withLineSeparator("\r\n")
+                                .withUseHeader(true);
 
             ObjectReader reader = mapper.readerFor(ApplicationImport.class)
-                    .withFeatures(CsvParser.Feature.INSERT_NULLS_FOR_MISSING_COLUMNS,
-                            CsvParser.Feature.EMPTY_STRING_AS_NULL)
                     .with(csvSchema);
 
             return reader.readValues(inputFileContent);
