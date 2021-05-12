@@ -1,36 +1,32 @@
 package io.tackle.applicationimporter;
 
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
-import com.fasterxml.jackson.dataformat.csv.CsvParser;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
-import org.apache.commons.io.FileUtils;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.transaction.Transactional;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Iterator;
-import java.util.Map;
+
+import static javax.transaction.Transactional.TxType.REQUIRED;
 
 @Path("/file")
+@ApplicationScoped
 public class ImportService {
 
     @POST
     @Path("/upload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Transactional(REQUIRED)
     public Response importFile(@MultipartForm MultipartImportBody data) throws Exception {
         try {
 
@@ -46,13 +42,16 @@ public class ImportService {
         return Response.ok().build();
     }
 
+
     private void writeFile(String content, String filename) throws IOException {
 
         MappingIterator<ApplicationImport> iter = decode(content);
         System.out.println("Printing csv fields");
         while (iter.hasNext())
         {
-            System.out.println(iter.next());
+            ApplicationImport importedApplication = iter.next();
+            System.out.println(importedApplication);
+            importedApplication.persistAndFlush();
         }
 
     }

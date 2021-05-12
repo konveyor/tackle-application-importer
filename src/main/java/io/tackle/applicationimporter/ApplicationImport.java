@@ -1,8 +1,18 @@
 package io.tackle.applicationimporter;
 
 import com.fasterxml.jackson.annotation.JsonSetter;
+import io.tackle.commons.entities.AbstractEntity;
+import org.hibernate.annotations.ResultCheckStyle;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
-public class ApplicationImport {
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "application_import")
+public class ApplicationImport extends AbstractEntity {
     private String recordType1;
     private String applicationName;
     private String description;
@@ -16,6 +26,8 @@ public class ApplicationImport {
     private String tag3;
     private String tagType4;
     private String tag4;
+    private String errorMessage;
+    private Boolean isValid;
 
     public ApplicationImport()
     {
@@ -155,6 +167,23 @@ public class ApplicationImport {
                 ", Tag 4="+ tag4 +"]";
     }
 
+
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
+
+    public Boolean getValid() {
+        return isValid;
+    }
+
+    public void setValid(Boolean valid) {
+        isValid = valid;
+    }
 }
 
 

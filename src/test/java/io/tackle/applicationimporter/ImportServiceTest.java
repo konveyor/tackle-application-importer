@@ -79,52 +79,8 @@ public class ImportServiceTest extends SecuredResourceTest {
                 .statusCode(200).extract().response();
 
         assertEquals(200, response.getStatusCode());
-        /** assertEquals(description, response.path("description"));
-        assertEquals("alice", response.path("createUser"));
-        assertEquals("alice", response.path("updateUser"));
-
-         Long businessServiceId = Long.valueOf(response.path("id").toString());
-
-        final String newName = "Yet another different name";
-        businessService.name = newName;
-        given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body(businessService)
-                .pathParam("id", businessServiceId)
-                .when().put(PATH + "/{id}")
-                .then().statusCode(204);
-
-        given()
-                .accept("application/json")
-                .pathParam("id", businessServiceId)
-                .when().get(PATH + "/{id}")
-                .then()
-                .log().all()
-                .statusCode(200)
-                .body("name", is(newName),
-                        "description", is(description));
-
-        if (!nativeExecution) {
-            BusinessService updatedBusinessServiceFromDb = BusinessService.findById(businessServiceId);
-            assertEquals(newName, updatedBusinessServiceFromDb.name);
-            assertEquals(description, updatedBusinessServiceFromDb.description);
-            assertNotNull(updatedBusinessServiceFromDb.createTime);
-            assertNotNull(updatedBusinessServiceFromDb.updateTime);
-        }
-
-        given()
-                .pathParam("id", businessServiceId)
-                .when().delete(PATH + "/{id}")
-                .then().statusCode(204);
-
-        given()
-                .accept("application/json")
-                .pathParam("id", businessServiceId)
-                .when().get(PATH + "/{id}")
-                .then()
-                .log().all()
-                .statusCode(404);*/
+        //check the correct number of application imports have been persisted
+        assertEquals(7, ApplicationImport.listAll().size());
 
     }
 }
