@@ -1,4 +1,4 @@
-package io.tackle.applicationimporter;
+package io.tackle.applicationimporter.service;
 
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -6,6 +6,10 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import io.tackle.applicationimporter.MultipartImportBody;
+import io.tackle.applicationimporter.entity.ApplicationImport;
+import io.tackle.applicationimporter.mapper.ApplicationInventoryAPIMapper;
+import io.tackle.applicationimporter.mapper.ApplicationMapper;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -47,11 +51,17 @@ public class ImportService {
 
         MappingIterator<ApplicationImport> iter = decode(content);
         System.out.println("Printing csv fields");
+        ApplicationMapper mapper = new ApplicationInventoryAPIMapper();
         while (iter.hasNext())
         {
             ApplicationImport importedApplication = iter.next();
             System.out.println(importedApplication);
             importedApplication.persistAndFlush();
+            Response response = mapper.map(importedApplication);
+            if (response.getStatus() != Response.Status.OK.getStatusCode())
+            {
+                markFailedImportAsInvalid(importedApplication);
+            }
         }
 
     }
@@ -94,6 +104,12 @@ public class ImportService {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void markFailedImportAsInvalid(ApplicationImport importFile)
+    {
+        importFile.setValid(Boolean.FALSE);
+        importFile.persistAndFlush();
     }
 
 

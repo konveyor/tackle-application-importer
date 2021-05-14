@@ -1,4 +1,4 @@
-package io.tackle.applicationimporter;
+package io.tackle.applicationimporter.entity;
 
 import com.fasterxml.jackson.annotation.JsonSetter;
 import io.tackle.commons.entities.AbstractEntity;
