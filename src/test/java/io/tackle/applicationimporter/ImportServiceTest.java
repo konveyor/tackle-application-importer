@@ -2,27 +2,37 @@ package io.tackle.applicationimporter;
 
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.common.ResourceArg;
+import io.quarkus.test.junit.QuarkusMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.config.EncoderConfig;
 import io.tackle.applicationimporter.entity.ApplicationImport;
+import io.tackle.applicationimporter.mapper.ApplicationInventoryAPIMapper;
+import io.tackle.applicationimporter.service.ImportService;
 import io.tackle.commons.testcontainers.KeycloakTestResource;
 import io.tackle.commons.testcontainers.PostgreSQLDatabaseTestResource;
 import io.tackle.commons.tests.SecuredResourceTest;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
+import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.ws.rs.core.MediaType;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static io.restassured.RestAssured.given;
+import static javax.transaction.Transactional.TxType.REQUIRED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
 
 @QuarkusTest
 @QuarkusTestResource(value = PostgreSQLDatabaseTestResource.class,
@@ -39,6 +49,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
         }
 )
 public class ImportServiceTest extends SecuredResourceTest {
+
+    @Inject
+    ApplicationInventoryAPIMapper apiMapper;
 
     @BeforeAll
     public static void init() {
@@ -81,5 +94,40 @@ public class ImportServiceTest extends SecuredResourceTest {
         assertEquals(7, ApplicationImport.listAll().size());
 
     }
+
+    @Test
+    @Transactional(REQUIRED)
+    protected void testMapToApplicationRejected()
+    {
+        ImportService svc = new ImportService();
+        ApplicationImport appImport1 = new ApplicationImport();
+        appImport1.setBusinessService("BS 1");
+        appImport1.persistAndFlush();
+        ApplicationImport appImport2 = new ApplicationImport();
+        appImport2.setBusinessService("BS 2");
+        appImport2.persistAndFlush();
+        ApplicationImport appImport3 = new ApplicationImport();
+        appImport3.setBusinessService("BS 3");
+        appImport3.persistAndFlush();
+
+        List<ApplicationImport> appList = new ArrayList();
+        appList.add(appImport1);
+        appList.add(appImport2);
+        appList.add(appImport3);
+
+        Long id = appImport1.id;
+        System.out.println("appImport1.id= " + id);
+
+        //ApplicationInventoryAPIMapper
+                apiMapper = Mockito.mock(ApplicationInventoryAPIMapper.class);
+        Mockito.when(apiMapper.map(appImport1)).thenReturn(javax.ws.rs.core.Response.serverError().build());
+        QuarkusMock.installMockForType(apiMapper, ApplicationInventoryAPIMapper.class);
+        svc.mapImportsToApplication(appList);
+
+        ApplicationImport refusedImport = ApplicationImport.findById(id);
+        assertEquals(Boolean.FALSE, refusedImport.getValid());
+
+    }
+
 }
 

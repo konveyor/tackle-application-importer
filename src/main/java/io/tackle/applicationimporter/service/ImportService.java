@@ -20,6 +20,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static javax.transaction.Transactional.TxType.REQUIRED;
 
@@ -36,7 +38,8 @@ public class ImportService {
 
             System.out.println("File: " + data.getFile());
             System.out.println("FileName: " + data.getFileName());
-            writeFile(data.getFile(), data.getFileName());
+            List<ApplicationImport> importList = writeFile(data.getFile(), data.getFileName());
+            mapImportsToApplication(importList);
         } catch (Exception e) {
 
             e.printStackTrace();
@@ -47,23 +50,19 @@ public class ImportService {
     }
 
 
-    private void writeFile(String content, String filename) throws IOException {
+    private List<ApplicationImport> writeFile(String content, String filename) throws IOException {
 
         MappingIterator<ApplicationImport> iter = decode(content);
+        List<ApplicationImport> importList = new ArrayList();
         System.out.println("Printing csv fields");
-        ApplicationMapper mapper = new ApplicationInventoryAPIMapper();
         while (iter.hasNext())
         {
             ApplicationImport importedApplication = iter.next();
             System.out.println(importedApplication);
+            importList.add(importedApplication);
             importedApplication.persistAndFlush();
-            Response response = mapper.map(importedApplication);
-            if (response.getStatus() != Response.Status.OK.getStatusCode())
-            {
-                markFailedImportAsInvalid(importedApplication);
-            }
         }
-
+        return importList;
     }
 
 
@@ -104,6 +103,21 @@ public class ImportService {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void mapImportsToApplication(List<ApplicationImport> importList)
+    {
+        ApplicationMapper mapper = new ApplicationInventoryAPIMapper();
+        importList.forEach(importedApplication -> {
+            System.out.println("Mapping :" + importedApplication.id);
+            Response response = mapper.map(importedApplication);
+            System.out.println("Response Status :" + response.getStatus());
+            if (response.getStatus() != Response.Status.OK.getStatusCode())
+            {
+                markFailedImportAsInvalid(importedApplication);
+                System.out.println(importedApplication.id + " Import Mapping Failed");
+            }
+        });
     }
 
     private void markFailedImportAsInvalid(ApplicationImport importFile)
