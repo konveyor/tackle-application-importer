@@ -17,8 +17,11 @@ import io.tackle.commons.tests.SecuredResourceTest;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.ws.rs.core.MediaType;
@@ -50,12 +53,16 @@ import static org.mockito.Mockito.*;
 )
 public class ImportServiceTest extends SecuredResourceTest {
 
-    @Inject
-    ApplicationInventoryAPIMapper apiMapper;
+    //@InjectMocks
+    //@ApplicationScoped
+    //ApplicationInventoryAPIMapper apiMapper;
+
 
     @BeforeAll
     public static void init() {
         PATH = "/file/upload";
+
+
     }
 
 
@@ -100,6 +107,7 @@ public class ImportServiceTest extends SecuredResourceTest {
     protected void testMapToApplicationRejected()
     {
         ImportService svc = new ImportService();
+
         ApplicationImport appImport1 = new ApplicationImport();
         appImport1.setBusinessService("BS 1");
         appImport1.persistAndFlush();
@@ -111,17 +119,20 @@ public class ImportServiceTest extends SecuredResourceTest {
         appImport3.persistAndFlush();
 
         List<ApplicationImport> appList = new ArrayList();
+
+
         appList.add(appImport1);
         appList.add(appImport2);
         appList.add(appImport3);
 
+
         Long id = appImport1.id;
         System.out.println("appImport1.id= " + id);
 
-        //ApplicationInventoryAPIMapper
+        ApplicationInventoryAPIMapper
                 apiMapper = Mockito.mock(ApplicationInventoryAPIMapper.class);
         Mockito.when(apiMapper.map(appImport1)).thenReturn(javax.ws.rs.core.Response.serverError().build());
-        QuarkusMock.installMockForType(apiMapper, ApplicationInventoryAPIMapper.class);
+        QuarkusMock.installMockForInstance(apiMapper, ApplicationInventoryAPIMapper.class);
         svc.mapImportsToApplication(appList);
 
         ApplicationImport refusedImport = ApplicationImport.findById(id);
